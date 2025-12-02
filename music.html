@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music | Hina Nagai</title>
+    
+    <!-- フォント -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400&family=Syne:wght@700;800&family=Oswald:wght@400;500&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-color: #050505;
+            --text-color: #333; /* デフォルトは少し暗くして、ホバーで白くする */
+            --highlight-color: #f0f0f0;
+            --font-head: 'Syne', sans-serif;
+            --font-body: 'Inter', sans-serif;
+            --font-hero: 'Oswald', sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: none; }
+        
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-body);
+            overflow: hidden; /* 横スクロールのみにする */
+            height: 100vh;
+        }
+
+        a { text-decoration: none; color: inherit; }
+        img { display: block; width: 100%; height: 100%; object-fit: cover; }
+        ul { list-style: none; }
+
+        /* --- カスタムカーソル --- */
+        .cursor-dot,
+        .cursor-outline {
+            position: fixed;
+            top: 0; left: 0;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            z-index: 9999;
+            pointer-events: none;
+        }
+
+        .cursor-dot {
+            width: 8px;
+            height: 8px;
+            background-color: white;
+        }
+
+        .cursor-outline {
+            width: 40px;
+            height: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            transition: width 0.2s, height 0.2s, background-color 0.2s;
+        }
+
+        /* ホバー時のカーソル変化 */
+        body.hovered .cursor-outline {
+            width: 80px;
+            height: 80px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: transparent;
+            backdrop-filter: blur(2px);
+        }
+
+
+        /* ヘッダー */
+        header {
+            height: 100px; padding: 0 5%; display: flex; justify-content: space-between; align-items: center;
+            position: fixed; width: 100%; top: 0; left: 0; z-index: 100; mix-blend-mode: difference;
+            color: #fff;
+        }
+        .brand { font-family: var(--font-head); font-weight: 800; font-size: 1.5rem; text-transform: uppercase; }
+        .back-link { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; }
+
+        /* ホバー画像（フローティング） */
+        .hover-image-wrapper {
+            position: fixed;
+            top: 0; left: 0;
+            width: 350px; 
+            height: 450px;
+            pointer-events: none;
+            z-index: 50; /* 文字より後ろ、背景より前 */
+            opacity: 0;
+            transform: scale(0.8);
+            transition: opacity 0.4s ease, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow: hidden;
+            border-radius: 4px;
+        }
+        .hover-image-wrapper.active {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* --- 横並びテキストエリア --- */
+        .music-wrapper {
+            display: flex;
+            align-items: center; /* 垂直中央 */
+            height: 100vh;
+            padding-left: 10%; /* 最初の余白 */
+            padding-right: 10%;
+            overflow-x: auto;
+            white-space: nowrap;
+            gap: 4vw; /* 文字同士の間隔 */
+        }
+        .music-wrapper::-webkit-scrollbar { display: none; }
+
+        .page-title-fixed {
+            position: fixed;
+            bottom: 40px;
+            left: 5%;
+            font-family: var(--font-hero);
+            font-size: 1.2rem;
+            color: #666;
+            text-transform: uppercase;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* 各テキストアイテム */
+        .music-item {
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .music-link {
+            display: block;
+            transition: transform 0.4s ease;
+        }
+
+        .artist-name {
+            font-family: var(--font-head);
+            /* 画面サイズに応じて可変する巨大文字 */
+            font-size: clamp(1rem, 2vw, 2rem); 
+            font-weight: 400;
+            text-transform: uppercase;
+            color: var(--text-color); /* 通常は暗い色 */
+            transition: color 0.4s;
+            line-height: 0.9;
+        }
+        
+        /* 区切り文字（スラッシュ） */
+        .slash {
+            font-family: var(--font-hero);
+            font-size: clamp(1rem, 1vw, 1rem);
+            color: #333;
+            margin-left: 0.01vw;
+            transform: translateY(-10px);
+        }
+
+        .track-info {
+            display: block;
+            font-size: 0.7rem;
+            color: #555;
+            margin-top: 10px;
+            letter-spacing: 0.1em;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: 0.4s;
+        }
+
+        /* ホバー時のスタイル */
+        .music-link:hover .artist-name {
+            color: var(--highlight-color); /* 白く光る */
+        }
+        .music-link:hover {
+            transform: scale(1.05); /* 文字が少し大きくなる */
+        }
+        .music-link:hover .track-info {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* スマホ対応 */
+        @media (max-width: 768px) {
+            body { overflow: auto; height: auto; }
+            .music-wrapper { 
+                flex-direction: column; 
+                height: auto; 
+                padding: 150px 5% 100px; 
+                gap: 60px; 
+                align-items: flex-start;
+                white-space: normal;
+            }
+            .page-title-fixed { position: static; margin-bottom: 40px; display: block; }
+            
+            .slash { display: none; } /* スマホでは区切り線消す */
+            .artist-name { font-size: 3.5rem; color: #fff; }
+            .track-info { opacity: 1; transform: none; color: #888; }
+            
+            * { cursor: auto !important; }
+            .cursor-dot, .cursor-outline, .hover-image-wrapper { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="cursor-dot"></div>
+    <div class="cursor-outline"></div>
+
+    <!-- ホバー画像エリア -->
+    <div class="hover-image-wrapper">
+        <img src="" id="preview-img" alt="Preview">
+    </div>
+
+    <header>
+        <a href="index.html" class="brand">Hina Nagai</a>
+        <a href="index.html" class="back-link">Back to Home</a>
+    </header>
+
+    <!-- 固定タイトル（装飾） -->
+    <div class="page-title-fixed">Music Works</div>
+
+    <div class="music-wrapper">
+        
+        <!-- Item 01 -->
+        <div class="music-item">
+            <a href="#" class="music-link" data-img="images/photo094-3.jpg" data-pos="right">
+                <span class="artist-name">Samm Henshow</span>
+                <span class="track-info">for someone, somewhere</span>
+            </a>
+        </div>
+        
+        <!-- 区切り -->
+
+
+        <!-- Item 02 -->
+        <div class="music-item">
+            <a href="#" class="music-link" data-img="images/photo100-2.jpg" data-pos="right">
+                <span class="artist-name">Teddy Swims</span>
+                <span class="track-info">I’ve Tried Everything But Therapy</span>
+            </a>
+        </div>
+
+
+
+        <!-- Item 03 -->
+        <div class="music-item">
+            <a href="#" class="music-link" data-img="images/photo077.jpg" data-pos="right">
+                <span class="artist-name">Osworld</span>
+                <span class="track-info">AH1 / Brightness</span>
+            </a>
+        </div>
+
+
+
+        <!-- Item 04 -->
+        <div class="music-item">
+            <a href="#" class="music-link" data-img="images/photo015-3.jpg" data-pos="right">
+                <span class="artist-name">RHYME SO</span>
+                <span class="track-info">Fuckin Brilliant</span>
+            </a>
+        </div>
+
+
+
+        <!-- Item 05 -->
+        <div class="music-item">
+            <a href="#" class="music-link" data-img="images/photo089.jpg" data-pos="right">
+                <span class="artist-name">Aile The Shota</span>
+                <span class="track-info">Snap</span>
+            </a>
+        </div>
+
+         <div class="music-item">
+            <a href="#" class="music-link" data-img="images/photo098.jpg" data-pos="left">
+                <span class="artist-name">RIRIA</span>
+                <span class="track-info">Snap</span>
+            </a>
+        </div>
+
+        <!-- 必要に応じて増やしてください -->
+
+    </div>
+
+    <script>
+       const cursorDot = document.querySelector('.cursor-dot');
+        const cursorOutline = document.querySelector('.cursor-outline');
+        const hoverWrapper = document.querySelector('.hover-image-wrapper');
+        const previewImg = document.getElementById('preview-img');
+        const wrapper = document.querySelector('.music-wrapper');
+        const links = document.querySelectorAll('.music-link');
+
+        let currentDirection = 'right';
+
+        // 1. カーソル追従
+        window.addEventListener('mousemove', (e) => {
+            if(window.innerWidth > 768) {
+                const posX = e.clientX;
+                const posY = e.clientY;
+
+                cursorDot.style.left = `${posX}px`;
+                cursorDot.style.top = `${posY}px`;
+                cursorOutline.animate({ left: `${posX}px`, top: `${posY}px` }, { duration: 500, fill: "forwards" });
+
+                let targetX = posX;
+                if (currentDirection === 'left') {
+                    targetX = posX - 390;
+                } else {
+                    targetX = posX + 40;
+                }
+
+                hoverWrapper.animate({
+                    left: `${targetX}px`,
+                    top: `${posY - 220}px` 
+                }, { duration: 600, fill: "forwards" });
+            }
+        });
+
+        // 2. 横スクロール
+        wrapper.addEventListener('wheel', (e) => {
+            if(window.innerWidth > 768) {
+                e.preventDefault();
+                wrapper.scrollLeft += e.deltaY;
+            }
+        });
+
+        // 3. リンクホバー時の処理
+        links.forEach(link => {
+            link.addEventListener('mouseenter', () => {
+                // ★ここを復活させました（カーソルを大きくする）
+                document.body.classList.add('hovered');
+
+                // 画像設定
+                const imgSrc = link.getAttribute('data-img');
+                previewImg.src = imgSrc;
+                currentDirection = link.getAttribute('data-pos') || 'right';
+                hoverWrapper.classList.add('active');
+            });
+
+            link.addEventListener('mouseleave', () => {
+                // ★ここを復活させました（カーソルを戻す）
+                document.body.classList.remove('hovered');
+                
+                // 画像を隠す
+                hoverWrapper.classList.remove('active');
+            });
+        });
+    </script>
+</body>
+</html>
