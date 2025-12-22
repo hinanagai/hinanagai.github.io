@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lookbook | Hina Nagai</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400&family=Syne:wght@700;800&family=Oswald:wght@400;500&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-color: #050505;
+            --text-color: #f0f0f0;
+            --font-head: 'Syne', sans-serif;
+            --font-hero: 'Oswald', sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: none; }
+        
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-head);
+            overflow: hidden; 
+            height: 100vh;
+        }
+
+        a { text-decoration: none; color: inherit; }
+        
+        /* --- 【修正1】動画(video)も画像(img)と同じスタイルを適用 --- */
+        img, video { 
+            display: block; /* 隙間をなくす */
+            height: 100%; 
+            width: auto; 
+            object-fit: cover; 
+        }
+
+        /* カーソル */
+        .cursor-dot, .cursor-outline {
+            position: fixed; top: 0; left: 0; transform: translate(-50%, -50%);
+            border-radius: 50%; z-index: 9999; pointer-events: none;
+        }
+        .cursor-dot { width: 8px; height: 8px; background-color: white; }
+        .cursor-outline {
+            width: 40px; height: 40px; border: 1px solid rgba(255, 255, 255, 0.5);
+            transition: width 0.2s, height 0.2s, background-color 0.2s;
+        }
+        body.hovered .cursor-outline {
+            width: 80px; height: 80px; background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(2px); border-color: transparent;
+        }
+
+        header {
+            height: 100px; padding: 0 5%; display: flex; justify-content: space-between; align-items: center;
+            position: fixed; top: 0; left: 0; width: 100%; z-index: 100; mix-blend-mode: difference;
+        }
+        .brand { font-family: var(--font-head); font-weight: 500; font-size: 1.5rem; text-transform: uppercase; }
+        .back-link { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; }
+
+        /* コンテナ */
+        .horizontal-strip {
+            display: flex;
+            align-items: center; 
+            height: 100vh;
+            padding-left: 1%; 
+            padding-right: 10%;
+            gap: 60px; 
+            overflow-x: auto; 
+            white-space: nowrap;
+        }
+        .horizontal-strip::-webkit-scrollbar { display: none; }
+
+        .strip-title { flex-shrink: 0; margin-right: 60px; }
+        .strip-title h1 { font-family: var(--font-hero); font-size: 5rem; text-transform: uppercase; line-height: 0.9; }
+        
+        /* 画像ラッパー */
+        .img-item {
+            flex-shrink: 0;
+            height: 65vh; 
+            transition: transform 0.3s;
+        }
+        
+        /* 通常のホバーアニメーション（拡大） */
+        .img-item:hover {
+            transform: scale(1.02); 
+            opacity: 1;
+        }
+
+        /* --- 【修正2】特定のクラス(no-zoom)がついている場合は拡大しない --- */
+        .img-item.no-zoom:hover {
+            transform: none; /* 拡大なし */
+        }
+
+        @media (max-width: 768px) {
+            body { overflow: auto; height: auto; }
+            .horizontal-strip { 
+                flex-direction: column; 
+                height: auto; 
+                padding: 150px 5% 100px; 
+                gap: 60px; 
+                align-items: center;
+            }
+            .strip-title { margin-right: 0; margin-bottom: 20px; text-align: center; }
+            .strip-title h1 { font-size: 3.5rem; }
+            .img-item { width: 100%; height: auto; }
+            .img-item img, .img-item video { width: 100%; height: auto; }
+            * { cursor: auto !important; }
+            .cursor-dot, .cursor-outline { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="cursor-dot"></div>
+    <div class="cursor-outline"></div>
+
+    <header>
+        <a href="project fullscreen.html" class="brand">Ecoes Unseen</a>
+        <a href="project fullscreen.html" class="back-link">Close</a>
+    </header>
+
+    <div class="horizontal-strip">
+        
+        <div class="strip-title">
+            <h1></h1>
+        </div>
+
+        <div class="img-item">
+            <img src="project1/01.jpg" alt="">
+        </div>
+
+        <div class="img-item">
+            <img src="project1/029.jpg" alt="">
+        </div>
+
+        <!-- 
+           【修正2の適用】クラスに "no-zoom" を追加しました。
+           これでこの動画だけホバーしても拡大されません。
+
+           【音声について】controls属性を追加しました。
+           詳しくは後述の説明をご覧ください。
+        -->
+        <div class="img-item no-zoom">
+            <video src="project1/ecoes unseen.mp4" autoplay loop muted playsinline controls></video>
+        </div>
+
+         <div class="img-item">
+            <img src="project1/16-2.jpg" alt="">
+        </div>
+
+    </div>
+
+    <script>
+        const dot = document.querySelector('.cursor-dot');
+        const outline = document.querySelector('.cursor-outline');
+        window.addEventListener('mousemove', e => {
+            if(window.innerWidth > 768) {
+                dot.style.left = e.clientX+'px';
+                dot.style.top = e.clientY+'px';
+                outline.animate({left:e.clientX+'px', top:e.clientY+'px'}, {duration:500, fill:"forwards"});
+            }
+        });
+        
+        const container = document.querySelector('.horizontal-strip');
+        container.addEventListener('wheel', e => {
+            if(window.innerWidth > 768) {
+                e.preventDefault();
+                container.scrollLeft += e.deltaY;
+            }
+        });
+
+        document.querySelectorAll('a').forEach(l => {
+            l.addEventListener('mouseenter', () => document.body.classList.add('hovered'));
+            l.addEventListener('mouseleave', () => document.body.classList.remove('hovered'));
+        });
+    </script>
+</body>
+</html>
