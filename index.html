@@ -185,9 +185,18 @@
         @media (max-width: 768px) {
             * { cursor: auto !important; }
             .cursor-dot, .cursor-outline, .hover-image-wrapper { display: none; }
+
+             /* 追加：スマホでは名前を少し小さくする */
+　　　　　　    .brand {
+    　　　　    font-size: 1.2rem; 
+   　　　　 }
             
             /* スマホでのテキスト位置微調整 */
-            .header-desc { top: 65px; font-size: 0.7rem; }
+               .header-desc { 
+                top: 75px;        /* 65px → 75px に変更（名前から離す） */
+                font-size: 0.65rem; 
+                line-height: 1.8; /* 行間を広げて重なりを防ぐ */
+          }
             
             .album-link { padding: 30px 0; }
             .album-name { font-size: 2rem; color: #fff; }
