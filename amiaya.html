@@ -55,16 +55,17 @@
         .back-link { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; }
 
         /* --- 横並びコンテナ --- */
-        .horizontal-strip {
+           .horizontal-strip {
             display: flex;
             align-items: center; /* 上下中央揃え */
+            justify-content: center; /* ★ここを追加：左右も中央揃え */
+            
             height: 100vh;
-            padding-left: 1%; /* 最初の余白 */
-            padding-right: 10%;
             gap: 40px; /* 画像ごとの隙間 */
             
             overflow-x: auto; /* 横スクロール許可 */
             white-space: nowrap;
+            width: 100%;
         }
         /* スクロールバー非表示 */
         .horizontal-strip::-webkit-scrollbar { display: none; }
@@ -97,7 +98,7 @@
             .horizontal-strip { 
                 flex-direction: column; 
                 height: auto; 
-                padding: 110px 5% 100px; 
+                padding: 150px 5% 100px; 
                 gap: 60px; 
                 align-items: center;
             }
@@ -136,11 +137,11 @@
        
 
         <div class="img-item">
-            <img src="amiaya/02.JPG" alt="">
+            <img src="amiaya/02.jpg" alt="">
         </div>
 
         <div class="img-item">
-             <img src="amiaya/01.JPG" alt="">
+             <img src="amiaya/01.jpg" alt="">
         </div>
 
     </div>
