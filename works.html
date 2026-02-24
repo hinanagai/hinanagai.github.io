@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photography | Hina Nagai</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400&family=Syne:wght@700;800&family=Oswald:wght@400;500&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-color: #050505;
+            --text-color: #f0f0f0;
+            --font-head: 'Syne', sans-serif;
+            --font-body: 'Inter', sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: none; }
+        
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-body);
+            overflow: hidden; 
+            height: 100vh;
+        }
+
+        a { text-decoration: none; color: inherit; }
+        img, video { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+        /* カーソル */
+        .cursor-dot, .cursor-outline {
+            position: fixed; top: 0; left: 0; transform: translate(-50%, -50%);
+            border-radius: 50%; z-index: 9999; pointer-events: none;
+        }
+        .cursor-dot { width: 8px; height: 8px; background-color: white; }
+        .cursor-outline {
+            width: 40px; height: 40px; border: 1px solid rgba(255, 255, 255, 0.5);
+            transition: width 0.2s, height 0.2s, background-color 0.2s;
+        }
+        body.hovered .cursor-outline {
+            width: 80px; height: 80px; background-color: rgba(255, 255, 255, 0.1);
+            border-color: transparent; backdrop-filter: blur(2px);
+        }
+
+        /* --- ヘッダー --- */
+        header {
+            position: fixed; top: 0; left: 0; width: 100%; 
+            height: 100px;
+            padding: 0 5%; display: flex; justify-content: space-between; align-items: center;
+            z-index: 100; mix-blend-mode: difference;
+        }
+        .brand { font-family: var(--font-head); font-weight: 800; font-size: 1.5rem; text-transform: uppercase; letter-spacing: -0.02em; }
+        .back-link { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.7; }
+
+        /* --- フィルタータブエリア --- */
+        .filter-container {
+            position: fixed;
+            top: 100px; 
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 50;
+            display: flex;
+            gap: 40px;
+        }
+        .filter-btn {
+            background: none; border: none;
+            color: #444;
+            font-family: var(--font-head);
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: color 0.4s ease;
+            letter-spacing: 0.15em;
+            position: relative;
+            padding-bottom: 6px;
+        }
+        .filter-btn:hover, .filter-btn.active { color: #fff; }
+        .filter-btn::after {
+            content: ''; position: absolute; bottom: 0; left: 50%; width: 0%; height: 0px; 
+            background-color: #fff;
+            transition: width 0.4s cubic-bezier(0.25, 1, 0.5, 1), left 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        .filter-btn.active::after, .filter-btn:hover::after { width: 100%; left: 0; height: 1px; }
+
+        /* --- 横スクロールコンテナ --- */
+        .horizontal-strip {
+            display: flex;
+            align-items: flex-start;
+            height: 100vh;
+            padding-left: 10%;
+            padding-right: 15%;
+            padding-top: 180px; 
+            gap: 30px; 
+            overflow-x: auto; 
+            white-space: nowrap;
+        }
+        .horizontal-strip::-webkit-scrollbar { display: none; }
+
+        /* --- アイテム --- */
+        .img-item {
+            flex-shrink: 0;
+            height: 65vh; 
+            width: auto;
+            position: relative;
+            overflow: visible; 
+            background-color: #000;
+            transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1);
+            will-change: transform;
+        }
+        .img-item.hidden { display: none; }
+
+        .img-item:not([data-cat="film"])::after {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0); 
+            transition: background 0.6s ease;
+            z-index: 1; pointer-events: none;
+        }
+        .img-item:not([data-cat="film"]):hover::after { background: rgba(0, 0, 0, 0.4); }
+
+        /* --- アニメーション設定 --- */
+        .img-item img, .img-item video {
+            height: 100%; width: auto; object-fit: cover;
+            clip-path: inset(100% 0 0 0);
+            transform: translateY(30px);
+            transition: opacity 0.5s ease;
+        }
+
+        .img-item[data-cat="film"] img, 
+        .img-item[data-cat="film"] video {
+            clip-path: inset(0% 0 0 0);
+            transform: translateY(0);
+        }
+
+        .img-item.fade-in img {
+            animation: revealImage 1.4s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+        }
+
+        @keyframes revealImage {
+            0% { clip-path: inset(100% 0 0 0); transform: translateY(30px); }
+            100% { clip-path: inset(0% 0 0 0); transform: translateY(0); }
+        }
+
+        .img-item:hover { transform: scale(1.05); z-index: 10; }
+
+        .sound-btn {
+            position: absolute; bottom: 20px; right: 20px; z-index: 20;
+            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+            color: #fff; padding: 6px 12px; font-size: 10px; font-family: var(--font-head);
+            text-transform: uppercase; backdrop-filter: blur(5px);
+            opacity: 0; transition: opacity 0.3s;
+        }
+        .img-item:hover .sound-btn { opacity: 1; }
+
+        .item-info {
+            position: absolute; bottom: 0; left: 0; width: 100%;
+            padding: 40px 20px 20px;
+            background: linear-gradient(to top, rgba(0,0,0,0.5), transparent);
+            opacity: 0; transition: 0.5s;
+            transform: translateY(10px);
+            z-index: 2; pointer-events: none;
+        }
+        .item-title {
+            font-family: var(--font-head); color: #fff; font-size: 1.2rem;
+            display: block; text-transform: uppercase; letter-spacing: 0.05em;
+        }
+        .img-item:hover .item-info { opacity: 1; transform: translateY(0); }
+
+        @media (max-width: 768px) {
+            body { overflow: auto; height: auto; }
+            header { height: 80px; }
+            .filter-container { position: relative; top: 100px; left: 0; transform: none; justify-content: center; gap: 20px; padding: 20px 0; }
+            .horizontal-strip { flex-direction: column; height: auto; padding: 120px 5% 50px; gap: 40px; align-items: center; }
+            .img-item { width: 100%; height: auto; }
+            .img-item img, .img-item video { width: 100%; height: auto; clip-path: inset(0% 0 0 0); transform: none; }
+            .sound-btn { opacity: 1; }
+            .cursor-dot, .cursor-outline { display: none; }
+            * { cursor: auto !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="cursor-dot"></div>
+    <div class="cursor-outline"></div>
+
+    <header>
+        <a href="index.html" class="brand">Hina Nagai</a>
+        <a href="index.html" class="back-link">Back to Home</a>
+    </header>
+
+    <div class="filter-container">
+        <button class="filter-btn active" onclick="filterItems('fashion')">Fashion</button>
+        <button class="filter-btn" onclick="filterItems('music')">Music</button>
+        <button class="filter-btn" onclick="filterItems('film')">Film</button>
+    </div>
+
+    <div class="horizontal-strip" id="gallery-container">
+        <!-- === Fashion === -->
+        <a href="enfold.html" class="img-item" data-cat="fashion">
+            <img src="fashion/photo01.jpg" alt="">
+            <div class="item-info"><span class="item-title">ENFOLD</span></div>
+        </a>
+        <a href="viviano.html" class="img-item" data-cat="fashion">
+            <img src="fashion/photo039-3.jpg" alt="">
+            <div class="item-info"><span class="item-title">VIVIANO</span></div>
+        </a>
+        <a href="ancellm.html" class="img-item" data-cat="fashion">
+            <img src="fashion/photo074.jpg" alt="">
+            <div class="item-info"><span class="item-title">ANCELLM</span></div>
+        </a>
+        <a href="ecoes unseen.html" class="img-item" data-cat="fashion">
+            <img src="fashion/029.jpg" alt="">
+            <div class="item-info"><span class="item-title">Ecoes Unseen</span></div>
+        </a>
+        <a href="nike.html" class="img-item" data-cat="fashion">
+            <img src="fashion/photo022.jpg" alt="">
+            <div class="item-info"><span class="item-title">NIKE TOKYO</span></div>
+        </a>
+        <a href="gentle monster.html" class="img-item" data-cat="fashion">
+            <img src="fashion/photo056.jpg" alt="">
+            <div class="item-info"><span class="item-title">GENTLE MONSTER</span></div>
+        </a>
+        <a href="fashionsnap.html" class="img-item" data-cat="fashion">
+            <img src="fashion/042-3.jpg" alt="">
+            <div class="item-info"><span class="item-title">FASHIONSNAP</span></div>
+        </a>
+
+        <!-- === Music === -->
+        <a href="samm henshaw.html" class="img-item" data-cat="music">
+            <img src="music/09-3.jpg" alt="">
+            <div class="item-info"><span class="item-title">Samm Henshaw</span></div>
+        </a>
+        <a href="rhyme so.html" class="img-item" data-cat="music">
+            <img src="music/02.jpg" alt="">
+            <div class="item-info"><span class="item-title">RHYME SO</span></div>
+        </a>
+        <a href="ozworld.html" class="img-item" data-cat="music">
+            <img src="music/055.jpg" alt="">
+            <div class="item-info"><span class="item-title">Ozworld</span></div>
+        </a>
+        <a href="#" class="img-item" data-cat="music">
+            <img src="music/019-2.jpg" alt="">
+            <div class="item-info"><span class="item-title">GIO VARCHI</span></div>
+        </a>
+
+        <!-- === Film === -->
+        <div class="img-item" data-cat="film">
+            <video class="gallery-video" poster="video/05.jpg" loop muted playsinline preload="metadata">
+                <source src="video/ecoes unseen.mp4" type="video/mp4">
+            </video>
+            <button class="sound-btn" onclick="toggleSound(this)">Unmute</button>
+            <div class="item-info"><span class="item-title">Ecoes Unseen</span></div>
+        </div>
+        <div class="img-item" data-cat="film">
+            <video class="gallery-video" poster="video/06.jpg" loop muted playsinline preload="metadata">
+                <source src="video/inou_02.mp4" type="video/mp4">
+            </video>
+            <button class="sound-btn" onclick="toggleSound(this)">Unmute</button>
+            <div class="item-info"><span class="item-title">INOU</span></div>
+        </div>
+       
+        <div class="img-item" data-cat="film">
+            <video class="gallery-video" poster="video/08.jpg" loop muted playsinline preload="metadata">
+                <source src="video/discovered.mp4" type="video/mp4">
+            </video>
+            <button class="sound-btn" onclick="toggleSound(this)">Unmute</button>
+            <div class="item-info"><span class="item-title">DISCOVERED</span></div>
+        </div>
+
+    <script>
+        // --- 基本UI ---
+        const dot = document.querySelector('.cursor-dot');
+        const outline = document.querySelector('.cursor-outline');
+        window.addEventListener('mousemove', e => {
+            if(window.innerWidth > 768) {
+                dot.style.left = e.clientX+'px'; dot.style.top = e.clientY+'px';
+                outline.animate({left:e.clientX+'px', top:e.clientY+'px'}, {duration:500, fill:"forwards"});
+            }
+        });
+        
+        const container = document.querySelector('.horizontal-strip');
+        container.addEventListener('wheel', e => {
+            if(window.innerWidth > 768) {
+                e.preventDefault();
+                container.scrollLeft += e.deltaY;
+            }
+        });
+
+        document.querySelectorAll('a, button, .img-item').forEach(l => {
+            l.addEventListener('mouseenter', () => document.body.classList.add('hovered'));
+            l.addEventListener('mouseleave', () => document.body.classList.remove('hovered'));
+        });
+
+        // --- ビデオ制御 ---
+        document.querySelectorAll('.img-item[data-cat="film"]').forEach(item => {
+            const video = item.querySelector('video');
+            item.addEventListener('mouseenter', () => { video.play().catch(() => {}); });
+            item.addEventListener('mouseleave', () => { video.pause(); video.load(); });
+        });
+
+        function toggleSound(btn) {
+            const video = btn.parentElement.querySelector('video');
+            video.muted = !video.muted;
+            btn.innerText = video.muted ? "Unmute" : "Mute";
+        }
+
+        // --- 状態保存（リンククリック時） ---
+        document.querySelectorAll('.img-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const activeBtn = document.querySelector('.filter-btn.active');
+                const currentCategory = activeBtn ? activeBtn.innerText.toLowerCase() : 'fashion';
+                const scrollPos = container.scrollLeft;
+
+                sessionStorage.setItem('savedCategory', currentCategory);
+                sessionStorage.setItem('savedScrollPos', scrollPos);
+            });
+        });
+
+        // --- フィルタリング（復元フラグ skipAnim を追加） ---
+        function filterItems(category, skipAnim = false) {
+            const items = document.querySelectorAll('.img-item');
+            const buttons = document.querySelectorAll('.filter-btn');
+
+            buttons.forEach(btn => {
+                if (btn.innerText.toLowerCase() === category) btn.classList.add('active');
+                else btn.classList.remove('active');
+            });
+
+            let visibleCount = 0;
+
+            items.forEach((item) => {
+                const itemCat = item.getAttribute('data-cat');
+                item.classList.remove('fade-in'); 
+
+                if (itemCat === category) {
+                    item.classList.remove('hidden');
+                    
+                    if (category !== 'film') {
+                        if (skipAnim) {
+                            // 復元時はアニメーションなしで即表示
+                            item.classList.add('fade-in');
+                            const target = item.querySelector('img') || item.querySelector('video');
+                            if(target) {
+                                target.style.animation = 'none';
+                                target.style.clipPath = 'inset(0% 0 0 0)';
+                                target.style.transform = 'translateY(0)';
+                                target.style.opacity = '1';
+                            }
+                        } else {
+                            const delay = visibleCount * 80;
+                            setTimeout(() => {
+                                item.classList.add('fade-in');
+                            }, delay);
+                            visibleCount++;
+                        }
+                    }
+                } else {
+                    item.classList.add('hidden');
+                    const v = item.querySelector('video');
+                    if(v) { v.pause(); v.load(); }
+                }
+            });
+
+            // 復元モードでない時だけ左端に戻す
+            if (!skipAnim) {
+                container.scrollTo({ left: 0 });
+            }
+        }
+
+        // --- 初期表示（復元ロジック） ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedCategory = sessionStorage.getItem('savedCategory');
+            const savedScroll = sessionStorage.getItem('savedScrollPos');
+
+            if (savedCategory) {
+                // 保存されたカテゴリを復元（アニメーションなし）
+                filterItems(savedCategory, true);
+                if (savedScroll) {
+                    // 描画を待ってからスクロール位置を適用
+                    requestAnimationFrame(() => {
+                        container.scrollLeft = savedScroll;
+                    });
+                }
+                // 使い終わったらクリア
+                sessionStorage.removeItem('savedCategory');
+                sessionStorage.removeItem('savedScrollPos');
+            } else {
+                filterItems('fashion');
+            }
+        });
+    </script>
+</body>
+</html>
